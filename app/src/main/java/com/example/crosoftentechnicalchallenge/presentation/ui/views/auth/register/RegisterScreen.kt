@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +32,7 @@ fun RegisterScreen(navHostController: NavHostController = rememberNavController(
 
         val viewModel : RegisterViewModel = viewModel()
         val register by viewModel.registerUserState.collectAsState()
+        val state by viewModel.state.collectAsState()
 
         Column(
             modifier = Modifier
@@ -88,6 +90,12 @@ fun RegisterScreen(navHostController: NavHostController = rememberNavController(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Criar")
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            if (state == true) {
+                Text(text = "Cadastro realizado com sucesso!", color = Color.Green)
+            } else if(state == false) {
+                Text(text = "Erro ao cadastrar usuário, verifque os campos e tente novamente", color = Color.Red)
             }
             Spacer(modifier = Modifier.height(10.dp))
             HorizontalDivider()

@@ -1,11 +1,8 @@
 package com.example.crosoftentechnicalchallenge.presentation.ui.views.auth.login
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.crosoftentechnicalchallenge.data.repository.UserRegisterRepository
 import com.example.crosoftentechnicalchallenge.data.utils.RetrofitService
@@ -18,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class LoginViewModel(
     private val app : Application
@@ -56,21 +54,30 @@ class LoginViewModel(
     fun loginUser() {
         viewModelScope.launch {
             val credential = _loginState.value.toCredential()
-            val response = repository.loginUser(credential)
 
-            UserPersistence.setUser(_loginState.value.toUser())
+            try {
+                val response = repository.loginUser(credential)
+                UserPersistence.setUser(_loginState.value.toUser())
 
-            if(response.isSuccessful) {
-                val body = response.body()
-                _token.value = body?.token
-                body?.token?.let { token ->
-                    PreferencesHelper.saveToken(app, token)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    _token.value = body?.token
+                    body?.token?.let { token ->
+                        PreferencesHelper.saveToken(app, token)
+                    }
+                    Log.d("Login", body.toString())
+                    _state.value = false
+                } else {
+                    _state.value = true
+                    Log.d("Login", "Erro: ${response.code()} - ${response.message()}")
                 }
-                Log.d("Login", body.toString())
-                _state.value = false
-            } else {
+
+            } catch (e: IOException) {
                 _state.value = true
-                Log.d("Login", "Erro: ${response.code()} - ${response.message()}")
+                Log.d("Login", "Falha de conexão: verifique sua internet.")
+            } catch (e: Exception) {
+                _state.value = true
+                Log.d("Login", "Erro: ${e.message}")
             }
         }
     }

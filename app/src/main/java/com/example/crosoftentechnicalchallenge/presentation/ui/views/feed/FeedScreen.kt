@@ -106,8 +106,24 @@ fun FeedScreen() {
                 }
             }
             is FeedScreenUIState.Error -> {
-                val message = (state as FeedScreenUIState.Error).message
-                Text(text = message)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White)
+                ) {
+                    Image(
+                        modifier = Modifier.height(60.dp),
+                        painter = painterResource(id = R.drawable.baseline_signal_wifi_connected_no_internet_4_24),
+                        contentDescription = "Empty State",
+                        alignment = Alignment.Center
+                    )
+                    Text(
+                        text = "Ops! Você está sem conexão a internet, verifique sua conexão e tente novamente",
+                        color = Color.Black,
+                    )
+                }
             }
         }
     }

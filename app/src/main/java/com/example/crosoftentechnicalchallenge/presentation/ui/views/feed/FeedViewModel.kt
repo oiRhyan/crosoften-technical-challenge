@@ -17,7 +17,7 @@ class FeedViewModel(
     private val app : Application
 ) : AndroidViewModel(app) {
 
-    private val _state = MutableStateFlow<FeedScreenUIState>(FeedScreenUIState.isLoading)
+    private var _state = MutableStateFlow<FeedScreenUIState>(FeedScreenUIState.isLoading)
     val state = _state.asStateFlow()
 
     private val repository = BooksRepository(
@@ -55,12 +55,17 @@ class FeedViewModel(
     private fun getAllBooks(token: String) {
         val bearerToken = "Bearer $token"
         viewModelScope.launch {
-            val response = repository.getAllBooks(bearerToken)
-            if (response.isSuccessful) {
-                _state.value = FeedScreenUIState.Success(response.body()?.data ?: emptyList())
-                response.body()?.toString()?.let { Log.v("books" , it) }
-            } else {
-                _state.value = FeedScreenUIState.Error("Erro: ${response.code()} - ${response.message()}")
+            try {
+                _state.value = FeedScreenUIState.isLoading
+                val response = repository.getAllBooks(bearerToken)
+                if (response.isSuccessful) {
+                    _state.value = FeedScreenUIState.Success(response.body()?.data ?: emptyList())
+                    response.body()?.toString()?.let { Log.v("books" , it) }
+                } else {
+                    _state.value = FeedScreenUIState.Error("Erro: ${response.code()} - ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _state.value = FeedScreenUIState.Error("Erro ao carregar livros")
             }
         }
     }

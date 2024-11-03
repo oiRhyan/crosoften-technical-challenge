@@ -1,5 +1,6 @@
 package com.example.crosoftentechnicalchallenge.presentation.ui.views.auth.register
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +22,9 @@ class RegisterViewModel : ViewModel() {
 
     private val _registerUserState = MutableStateFlow<RegisterUserState>(RegisterUserState())
     val registerUserState = _registerUserState.asStateFlow()
+
+    private val _state = MutableStateFlow<Boolean?>(null)
+    val state = _state.asStateFlow()
 
     init {
         updateRegisterState()
@@ -45,24 +49,36 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-
-    fun registerUser() {
-        viewModelScope.launch {
-            val user = _registerUserState.value.toUser()
-            val response = repository.registerUser(user)
-
-            UserPersistence.setUser(user)
-
-            if (response.isSuccessful) {
-                val body = response.body()
-                Log.d("User cadastrado com sucesso", body.toString())
-            } else {
-                Log.d("User", "Erro: ${response.code()} - ${response.message()}")
-                val errorBody = response.errorBody()?.string()
-                Log.d("User", "Erro no corpo: $errorBody")
-            }
-        }
+    @SuppressLint("SuspiciousIndentation")
+    private fun handleUserInputState() : Boolean {
+        val fieldState = _registerUserState.value
+          return fieldState.userName.isNotEmpty() &&
+                  fieldState.userEmail.isNotEmpty() &&
+                  fieldState.userPassword.isNotEmpty() &&
+                  fieldState.confirmPassword.isNotEmpty()
     }
 
 
+    fun registerUser() {
+        if(_registerUserState.value.passwordConfirm && handleUserInputState()){
+            _state.value = true
+            viewModelScope.launch {
+                val user = _registerUserState.value.toUser()
+                val response = repository.registerUser(user)
+
+                UserPersistence.setUser(user)
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    Log.d("User cadastrado com sucesso", body.toString())
+                } else {
+                    Log.d("User", "Erro: ${response.code()} - ${response.message()}")
+                    val errorBody = response.errorBody()?.string()
+                    Log.d("User", "Erro no corpo: $errorBody")
+                }
+            }
+        } else {
+            _state.value = false
+        }
+    }
 }
